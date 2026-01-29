@@ -29,7 +29,21 @@ install_required_tools() {
     info "Installing system dependencies..."
 
     sudo apt-get update -qq || warn "Some repositories failed to update, but proceeding anyway..."
-    sudo apt-get install -y -qq git fzf
+    sudo apt-get install -y -qq git fzf gpg
+
+    # Install eza (Modern ls)
+    if ! command -v eza &> /dev/null; then
+        info "Configuring eza repository..."
+
+        sudo mkdir -p /etc/apt/keyrings
+        wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list > /dev/null
+        sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+        sudo apt-get update -qq || warn "Some repositories failed to update, proceeding to install eza..."
+        sudo apt-get install -y -qq eza
+
+        success "eza installed successfully."
+    fi
 
     # Cleanup apt cache to save space
     sudo apt-get autoremove -y -qq
